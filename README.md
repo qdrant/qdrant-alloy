@@ -1,157 +1,179 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
-[![PyPI version](https://badge.fury.io/py/qdrant-hybrid-pipeline.svg)](https://pypi.org/project/qdrant-hybrid-pipeline/)
+[![PyPI version](https://badge.fury.io/py/qdrant-alloy.svg)](https://pypi.org/project/qdrant-alloy/)
 
-# Qdrant Hybrid Pipeline
+# Qdrant Alloy
 
-A configurable hybrid search pipeline for building semantic search applications with [FastEmbed](https://github.com/qdrant/fastembed) and [Qdrant](https://github.com/qdrant/qdrant).
+**Qdrant Alloy** is a high-performance, configurable hybrid search pipeline that fuses dense, sparse, and late-interaction embeddings into a single powerful retrieval engine.
+
+Built on [Qdrant](https://github.com/qdrant/qdrant) and [FastEmbed](https://github.com/qdrant/fastembed), Alloy implements a robust **"Retrieve & Rerank"** strategy in a single unified workflow:
+1.  **Dense Embeddings:** Capture semantic meaning and broad conceptual matches.
+2.  **Sparse Embeddings (SPLADE/BM25):** Ensure precise keyword and lexical matching.
+3.  **Late Interaction (ColBERT):** Perform fine-grained token-level reranking for superior relevance.
 
 ## Features
 
-- 🚀 **Hybrid Search**: Combines dense embeddings, sparse embeddings, and late interaction embeddings for superior search performance
-- 🔧 **Configurable**: Customize embedding models, vector parameters, and multi-tenancy settings
-- 🔄 **Batch Processing**: Efficiently process and index large document collections
-- 🏢 **Multi-Tenant Support**: Optional partition-based multi-tenancy for SaaS applications
+- 🔗 **Tri-Vector Architecture**: Seamlessly combines three vector strategies for state-of-the-art search quality.
+- ⚙️ **Fully Configurable**: Swap embedding models, distance metrics, and vector parameters via simple Python config or YAML.
+- 🏢 **Multi-Tenant Native**: Built-in support for partition-based multi-tenancy, perfect for SaaS applications.
+- 🚀 **Production Ready**: Supports batch processing, sharding, and replication factors out of the box.
 
 ## Installation
 
 ```bash
-pip install fastembed-hybrid-pipeline
+pip install qdrant-alloy
 ```
 
-*Requires Python 3.11+*
+Requires Python 3.11+
 
 ## Quick Start
 
 ```python
-from qdrant_client import QdrantClient, models
-from fastembed import TextEmbedding, SparseEmbedding, LateInteractionTextEmbedding
-from qdrant_client.models import Distance, VectorParams, SparseVectorParams, KeywordIndexParams
-from hybrid_search import HybridPipelineConfig, HybridPipeline
 import uuid
+from qdrant_client import QdrantClient, models
+from fastembed import TextEmbedding, SparseTextEmbedding, LateInteractionTextEmbedding
+from qdrant_client.models import Distance, VectorParams, SparseVectorParams, KeywordIndexParams
+from qdrant_alloy import HybridPipelineConfig, HybridPipeline
 
-# Initialize Qdrant client
-client = QdrantClient(":memory:")  # Use a local instance or Qdrant Cloud
+# 1. Initialize Qdrant client
+# Use ":memory:" for testing or a URL for production (e.g., Qdrant Cloud)
+client = QdrantClient(":memory:")
 
-# Configure embedding models
+# 2. Configure embedding models
+# Dense (Semantic)
 text_model = TextEmbedding("BAAI/bge-small-en-v1.5")
-sparse_model = SparseEmbedding("Qdrant/bm25")
-late_interaction_model = LateInteractionTextEmbedding("answerdotai/answerai-colbert-small-v1")
-
-# Configure vector parameters
 dense_params = VectorParams(size=text_model.dimensions, distance=Distance.COSINE)
+
+# Sparse (Keyword)
+sparse_model = SparseTextEmbedding("Qdrant/bm25")
 sparse_params = SparseVectorParams(modifier=models.Modifier.IDF)
-late_interaction_params = VectorParams(size=late_interaction_model.dimensions, distance=Distance.COSINE)
 
-# Optional: Configure multi-tenancy
-partition_field = "tenant_id"
-partition_index = KeywordIndexParams(minWordLength=1, maxWordLength=100)
-partition_config = (partition_field, partition_index)
+# Late Interaction (Reranking)
+late_interaction_model = LateInteractionTextEmbedding("answerdotai/answerai-colbert-small-v1")
+late_interaction_params = VectorParams(
+    size=late_interaction_model.dimensions, 
+    distance=Distance.COSINE
+)
 
-# Create pipeline configuration
+# 3. Create pipeline configuration
 pipeline_config = HybridPipelineConfig(
     text_embedding_config=(text_model, dense_params),
     sparse_embedding_config=(sparse_model, sparse_params),
     late_interaction_text_embedding_config=(late_interaction_model, late_interaction_params),
-    partition_config=partition_config,  # Optional, for multi-tenant setup
-    multi_tenant=True,                 # Set to False for single-tenant setup
-    replication_factor=1,              # For production, use 2+
-    shard_number=1,                    # For production, use 3+
+    # Optional: Multi-tenant settings
+    partition_config=("tenant_id", KeywordIndexParams(minWordLength=1, maxWordLength=100)),
+    multi_tenant=True,
+    replication_factor=1,
+    shard_number=1,
 )
 
-# Initialize the pipeline
+# 4. Initialize the pipeline
 pipeline = HybridPipeline(
     qdrant_client=client,
     collection_name="documents",
     hybrid_pipeline_config=pipeline_config,
 )
 
-# Index documents
+# 5. Index documents
 documents = [
-    "FastEmbed is a lightweight Python library for state-of-the-art text embeddings.",
+    "Alloy fuses multiple search technologies into a stronger whole.",
     "Qdrant is a vector database for production-ready vector search.",
-    "Hybrid search combines multiple search techniques for better results."
+    "Late interaction models like ColBERT provide superior reranking capabilities."
 ]
 
+# Metadata payloads (required for multi-tenant setups)
 payloads = [
-    {"tenant_id": "acme_corp", "document_type": "library"},
-    {"tenant_id": "acme_corp", "document_type": "database"},
-    {"tenant_id": "acme_corp", "document_type": "technique"}
+    {"tenant_id": "acme_corp", "category": "tech"},
+    {"tenant_id": "acme_corp", "category": "database"},
+    {"tenant_id": "acme_corp", "category": "ml"}
 ]
 
-document_ids = [uuid.uuid4() for _ in range(len(documents))]
+ids = [uuid.uuid4() for _ in range(len(documents))]
 
-# Insert documents
-pipeline.insert_documents(documents, payloads, document_ids)
+pipeline.insert_documents(documents=documents, payloads=payloads, document_ids=ids)
 
-# Search
+# 6. Search
+# This performs dense+sparse retrieval followed by ColBERT reranking
 results = pipeline.search(
-    query="Which embedding library should I use?", 
+    query="How does hybrid search work?", 
     top_k=3,
-    partition_filter="acme_corp",  # Only needed for multi-tenant setups
+    partition_filter="acme_corp"
 )
 
-# Process results
+# 7. Process results
 for result in results:
-    print(f"Score: {result.score}")
+    print(f"Score: {result.score:.4f}")
     print(f"Document: {result.payload['document']}")
     print("-" * 30)
 ```
+
+## How It Works
+
+Alloy abstracts away the complexity of managing multiple embedding models and Qdrant query construction. When you run a search, Alloy performs a two-stage process:
+
+**Prefetch (Retrieval)**: The query is embedded into both Dense and Sparse vectors. Alloy queries Qdrant to retrieve the top candidates using these vectors. This casts a wide net (semantic) while preserving specific keywords (lexical).
+
+**Query (Rescoring)**: The retrieved candidates are immediately rescored using the Late Interaction (ColBERT) embeddings. This step examines the fine-grained interaction between query tokens and document tokens, surfacing the most relevant results to the top.
 
 ## Configuration Options
 
 ### Embedding Models
 
-The pipeline requires three types of embedding models from FastEmbed:
+Alloy is model-agnostic and works with any model supported by fastembed:
 
-1. **Dense Embeddings**: Traditional vector embeddings (TextEmbedding)
-2. **Sparse Embeddings**: Lexical-focused sparse embeddings (SparseEmbedding)  
-3. **Late Interaction**: Special embeddings for late interaction matching (LateInteractionTextEmbedding)
+- **Dense**: TextEmbedding (e.g., BAAI/bge-small-en-v1.5, intfloat/multilingual-e5-large)
+- **Sparse**: SparseTextEmbedding (e.g., Qdrant/bm25, prithivida/Splade_PP_en_v1)
+- **Late Interaction**: LateInteractionTextEmbedding (e.g., answerdotai/answerai-colbert-small-v1)
 
-### Vector Parameters
+### YAML Configuration
 
-Configure vector parameters for each embedding type:
+You can also load pipelines directly from YAML files for cleaner code:
 
-- **Dense & Late Interaction**: Size, distance metric (cosine, dot, euclidean)
-- **Sparse**: Uses default sparse vector parameters
+```yaml
+# config.yaml
+dense_embedding:
+  package: "fastembed"
+  model_name: "BAAI/bge-small-en-v1.5"
+  params:
+    size: 384
+    distance: "Cosine"
 
-### Multi-Tenant Configuration
+sparse_embedding:
+  package: "fastembed"
+  model_name: "Qdrant/bm25"
 
-For SaaS applications that need to separate data by tenant:
+late_interaction_embedding:
+  package: "fastembed"
+  model_name: "answerdotai/answerai-colbert-small-v1"
+  params:
+    size: 96
+    distance: "Cosine"
 
-```python
-# Enable multi-tenancy
-pipeline_config = HybridPipelineConfig(
-    # ... other configs ...
-    partition_config=("tenant_id", KeywordIndexParams(minWordLength=1, maxWordLength=100)),
-    multi_tenant=True,
-)
-
-# When searching, specify the tenant
-results = pipeline.search(query="my search", partition_filter="tenant_123")
+multi_tenant: true
+partition_config:
+  field: "tenant_id"
+  type: "keyword"
 ```
 
-### Performance Options
-
-For production deployments:
-
 ```python
-pipeline_config = HybridPipelineConfig(
-    # ... other configs ...
-    replication_factor=2,  # Data redundancy for high availability
-    shard_number=3,        # Data distribution for scalability
-)
+from qdrant_alloy import create_hybrid_pipeline_from_yaml
+
+config = create_hybrid_pipeline_from_yaml("config.yaml")
+pipeline = HybridPipeline(client, "my_collection", config)
 ```
 
 ## Development
 
+To contribute to Qdrant Alloy:
+
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/fastembed-hybrid-pipeline.git
-cd fastembed-hybrid-pipeline
+git clone https://github.com/DataParthenon/qdrant-alloy.git
+cd qdrant-alloy
 
-# Install development dependencies
-pip install -e ".[dev]"
+# Install development dependencies using uv
+uv venv
+uv pip install -e ".[dev]"
 
 # Run tests
 pytest
