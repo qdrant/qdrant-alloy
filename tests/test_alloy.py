@@ -1,7 +1,7 @@
 """
-Unit tests for the HybridPipeline class.
+Unit tests for the Alloy class.
 
-This module contains comprehensive tests for the HybridPipeline class,
+This module contains comprehensive tests for the Alloy class,
 ensuring that all pipeline operations (initialization, document insertion,
 and search) work as expected.
 """
@@ -15,7 +15,7 @@ from qdrant_client.models import (
     KeywordIndexParams,
 )
 
-from hybrid_search.hybrid_pipeline import HybridPipeline
+from alloy.alloy import Alloy
 
 
 @pytest.fixture
@@ -102,10 +102,10 @@ def mock_config(
     sparse_vector_params,
 ):
     """
-    Create a mock HybridPipelineConfig for testing.
+    Create a mock AlloyConfig for testing.
 
     Returns:
-        MagicMock: A mocked HybridPipelineConfig with all required methods.
+        MagicMock: A mocked AlloyConfig with all required methods.
     """
     config = MagicMock()
     config.multi_tenant = False
@@ -149,10 +149,10 @@ def mock_multi_tenant_config(
     keyword_index_params,
 ):
     """
-    Create a mock multi-tenant HybridPipelineConfig for testing.
+    Create a mock multi-tenant AlloyConfig for testing.
 
     Returns:
-        MagicMock: A mocked HybridPipelineConfig with multi-tenant support.
+        MagicMock: A mocked AlloyConfig with multi-tenant support.
     """
     config = MagicMock()
     config.multi_tenant = True
@@ -203,35 +203,35 @@ def mock_qdrant_client():
     return client
 
 
-class TestHybridPipeline:
+class TestAlloy:
     """
-    Test suite for the HybridPipeline class.
+    Test suite for the Alloy class.
 
     This class contains tests for initialization, document insertion, and search
-    functionality of the HybridPipeline class.
+    functionality of the Alloy class.
     """
 
-    def test_init(self, mock_qdrant_client, mock_config):
+    def test_init(self, mock_qdrant_client, mock_alloy_config):
         """
-        Test the initialization of HybridPipeline.
+        Test the initialization of Alloy.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Test that the collection was created
         mock_qdrant_client.create_collection.assert_called_once_with(
             collection_name="test_collection",
-            vectors_config=mock_config.get_vectors_config_dict.return_value,
-            sparse_vectors_config=mock_config.get_sparse_vectors_config_dict.return_value,
-            replication_factor=mock_config.replication_factor,
-            shard_number=mock_config.shard_number,
+            vectors_config=mock_alloy_config.get_vectors_config_dict.return_value,
+            sparse_vectors_config=mock_alloy_config.get_sparse_vectors_config_dict.return_value,
+            replication_factor=mock_alloy_config.replication_factor,
+            shard_number=mock_alloy_config.shard_number,
         )
 
         # Test that payload index was not created (since multi_tenant=False)
@@ -242,16 +242,16 @@ class TestHybridPipeline:
 
     def test_init_multi_tenant(self, mock_qdrant_client, mock_multi_tenant_config):
         """
-        Test the initialization of HybridPipeline with multi-tenant configuration.
+        Test the initialization of Alloy with multi-tenant configuration.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_multi_tenant_config: A fixture providing a mock multi-tenant HybridPipelineConfig.
+            mock_multi_tenant_config: A fixture providing a mock multi-tenant AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_multi_tenant_config,
+            alloy_config=mock_multi_tenant_config,
         )
 
         # Test that the collection was created
@@ -276,76 +276,76 @@ class TestHybridPipeline:
         assert pipeline.collection_name == "test_collection"
         assert pipeline.multi_tenant is True
 
-    def test_init_collection_exists(self, mock_qdrant_client, mock_config):
+    def test_init_collection_exists(self, mock_qdrant_client, mock_alloy_config):
         """
         Test that an error is raised when initializing with an existing collection.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
         mock_qdrant_client.collection_exists.return_value = True
 
         with pytest.raises(
             ValueError, match="Collection test_collection already exists"
         ):
-            HybridPipeline(
+            Alloy(
                 qdrant_client=mock_qdrant_client,
                 collection_name="test_collection",
-                hybrid_pipeline_config=mock_config,
+                alloy_config=mock_alloy_config,
             )
 
-    def test_embed_documents_single(self, mock_qdrant_client, mock_config):
+    def test_embed_documents_single(self, mock_qdrant_client, mock_alloy_config):
         """
         Test embedding a single document.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Reset the mocks to clear the calls from initialization
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             model.embed.reset_mock()
 
         document = "This is a test document"
         embeddings = pipeline._embed_documents(document)
 
         # Check that each model's embed method was called once with [document]
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             model.embed.assert_called_once_with([document])
 
         # Check that the result has the expected structure
         assert len(embeddings) == 3
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             assert model.model_name in embeddings
             assert embeddings[model.model_name] == model.embed.return_value
 
-    def test_embed_documents_multiple(self, mock_qdrant_client, mock_config):
+    def test_embed_documents_multiple(self, mock_qdrant_client, mock_alloy_config):
         """
         Test embedding multiple documents.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Reset the mocks to clear the calls from initialization
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             model.embed.reset_mock()
 
         # Update the return values for the embed methods to handle multiple documents
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             if model.model_name == "text_model":
                 model.embed.return_value = [[0.1, 0.2, 0.3], [0.11, 0.22, 0.33]]
             elif model.model_name == "sparse_model":
@@ -357,36 +357,36 @@ class TestHybridPipeline:
         embeddings = pipeline._embed_documents(documents)
 
         # Check that each model's embed method was called once with documents
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             model.embed.assert_called_once_with(documents)
 
         # Check that the result has the expected structure
         assert len(embeddings) == 3
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             assert model.model_name in embeddings
             assert embeddings[model.model_name] == model.embed.return_value
             assert len(embeddings[model.model_name]) == 2
 
-    def test_prepare_documents(self, mock_qdrant_client, mock_config):
+    def test_prepare_documents(self, mock_qdrant_client, mock_alloy_config):
         """
         Test preparing documents for insertion.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Reset the mocks to clear the calls from initialization
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             model.embed.reset_mock()
 
         # Update the return values for the embed methods to handle multiple documents
-        for model, _ in mock_config.list_embedding_configs.return_value:
+        for model, _ in mock_alloy_config.list_embedding_configs.return_value:
             if model.model_name == "text_model":
                 model.embed.return_value = [[0.1, 0.2, 0.3], [0.11, 0.22, 0.33]]
             elif model.model_name == "sparse_model":
@@ -409,7 +409,7 @@ class TestHybridPipeline:
 
             # Check that the vector has embeddings from all models
             assert len(point.vector) == 3
-            for model, _ in mock_config.list_embedding_configs.return_value:
+            for model, _ in mock_alloy_config.list_embedding_configs.return_value:
                 assert model.model_name in point.vector
                 assert point.vector[model.model_name] == model.embed.return_value[i]
 
@@ -421,18 +421,18 @@ class TestHybridPipeline:
             else:
                 assert point.payload["key2"] == "value2"
 
-    def test_prepare_documents_length_mismatch(self, mock_qdrant_client, mock_config):
+    def test_prepare_documents_length_mismatch(self, mock_qdrant_client, mock_alloy_config):
         """
         Test that an error is raised when the lengths of documents, payloads, and document_ids don't match.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         documents = ["This is document 1", "This is document 2"]
@@ -453,12 +453,12 @@ class TestHybridPipeline:
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_multi_tenant_config: A fixture providing a mock multi-tenant HybridPipelineConfig.
+            mock_multi_tenant_config: A fixture providing a mock multi-tenant AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_multi_tenant_config,
+            alloy_config=mock_multi_tenant_config,
         )
 
         documents = ["This is document 1"]
@@ -470,18 +470,18 @@ class TestHybridPipeline:
         ):
             pipeline._prepare_documents(documents, payloads, document_ids)
 
-    def test_insert_documents(self, mock_qdrant_client, mock_config):
+    def test_insert_documents(self, mock_qdrant_client, mock_alloy_config):
         """
         Test inserting documents into the collection.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Spy on the _prepare_documents method
@@ -519,22 +519,22 @@ class TestHybridPipeline:
             # Check that upsert was called 3 times with the prepared points
             assert mock_qdrant_client.upsert.call_count == 3
 
-    def test_embed_query(self, mock_qdrant_client, mock_config):
+    def test_embed_query(self, mock_qdrant_client, mock_alloy_config):
         """
         Test embedding a query string.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Reset the mocks to clear the calls from initialization
-        for model in mock_config.list_embedding_models.return_value:
+        for model in mock_alloy_config.list_embedding_models.return_value:
             model.embed.reset_mock()
             model.embed.return_value = [[0.1, 0.2, 0.3]]  # Single embedding vector
 
@@ -542,29 +542,29 @@ class TestHybridPipeline:
         embeddings = pipeline._embed_query(query)
 
         # Check that each model's embed method was called once with [query]
-        for model in mock_config.list_embedding_models.return_value:
+        for model in mock_alloy_config.list_embedding_models.return_value:
             model.embed.assert_called_once_with([query])
 
         # Check that the result has the expected structure
         assert len(embeddings) == 3
-        for model in mock_config.list_embedding_models.return_value:
+        for model in mock_alloy_config.list_embedding_models.return_value:
             assert model.model_name in embeddings
             assert (
                 embeddings[model.model_name] == model.embed.return_value[0]
             )  # First element of the list
 
-    def test_search(self, mock_qdrant_client, mock_config):
+    def test_search(self, mock_qdrant_client, mock_alloy_config):
         """
         Test searching for documents.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Spy on the _embed_query method
@@ -607,12 +607,12 @@ class TestHybridPipeline:
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_multi_tenant_config: A fixture providing a mock multi-tenant HybridPipelineConfig.
+            mock_multi_tenant_config: A fixture providing a mock multi-tenant AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_multi_tenant_config,
+            alloy_config=mock_multi_tenant_config,
         )
 
         # Spy on the _embed_query method
@@ -648,18 +648,18 @@ class TestHybridPipeline:
                 call_args["prefetch"][1].filter.must[0].match.value == partition_filter
             )
 
-    def test_search_invalid_overquery_factor(self, mock_qdrant_client, mock_config):
+    def test_search_invalid_overquery_factor(self, mock_qdrant_client, mock_alloy_config):
         """
         Test that an error is raised when overquery_factor is invalid.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         query = "This is a test query"
@@ -669,19 +669,19 @@ class TestHybridPipeline:
             pipeline.search(query, overquery_factor=0.5)
 
     def test_search_partition_filter_without_multi_tenant(
-        self, mock_qdrant_client, mock_config
+        self, mock_qdrant_client, mock_alloy_config
     ):
         """
         Test that an error is raised when a partition filter is provided without multi-tenant mode.
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig without multi-tenant support.
+            mock_config: A fixture providing a mock AlloyConfig without multi-tenant support.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         query = "This is a test query"
@@ -690,7 +690,7 @@ class TestHybridPipeline:
         ):
             pipeline.search(query, partition_filter="tenant1")
 
-    def test_delete_document(self, mock_qdrant_client, mock_config):
+    def test_delete_document(self, mock_qdrant_client, mock_alloy_config):
         """
         Test the delete_document method (currently a placeholder).
 
@@ -698,12 +698,12 @@ class TestHybridPipeline:
 
         Args:
             mock_qdrant_client: A fixture providing a mock QdrantClient.
-            mock_config: A fixture providing a mock HybridPipelineConfig.
+            mock_alloy_config: A fixture providing a mock AlloyConfig.
         """
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=mock_qdrant_client,
             collection_name="test_collection",
-            hybrid_pipeline_config=mock_config,
+            alloy_config=mock_alloy_config,
         )
 
         # Currently, this method is just a placeholder

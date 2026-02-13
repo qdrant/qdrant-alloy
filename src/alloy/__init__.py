@@ -5,13 +5,13 @@ This module provides components for creating and managing hybrid search pipeline
 that leverage multiple embedding types for improved search performance.
 """
 
-from .hybrid_pipeline import HybridPipeline
-from .hybrid_pipeline_config import HybridPipelineConfig, SentenceTransformerEmbedding
-from .config_yaml_loader import create_hybrid_pipeline_from_yaml
+from .alloy import Alloy
+from .alloy_config import AlloyConfig, SentenceTransformerEmbedding
+from .config_yaml_loader import create_alloy_from_yaml
 
 __all__ = [
-    "HybridPipeline",
-    "HybridPipelineConfig",
+    "Alloy",
+    "AlloyConfig",
     "SentenceTransformerEmbedding",
-    "create_hybrid_pipeline_from_yaml",
+    "create_alloy_from_yaml",
 ]

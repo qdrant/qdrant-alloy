@@ -33,7 +33,7 @@ import uuid
 from qdrant_client import QdrantClient, models
 from fastembed import TextEmbedding, SparseTextEmbedding, LateInteractionTextEmbedding
 from qdrant_client.models import Distance, VectorParams, SparseVectorParams, KeywordIndexParams
-from qdrant_alloy import HybridPipelineConfig, HybridPipeline
+from qdrant_alloy import AlloyConfig, Alloy
 
 # 1. Initialize Qdrant client
 # Use ":memory:" for testing or a URL for production (e.g., Qdrant Cloud)
@@ -56,7 +56,7 @@ late_interaction_params = VectorParams(
 )
 
 # 3. Create pipeline configuration
-pipeline_config = HybridPipelineConfig(
+pipeline_config = AlloyConfig(
     text_embedding_config=(text_model, dense_params),
     sparse_embedding_config=(sparse_model, sparse_params),
     late_interaction_text_embedding_config=(late_interaction_model, late_interaction_params),
@@ -68,10 +68,10 @@ pipeline_config = HybridPipelineConfig(
 )
 
 # 4. Initialize the pipeline
-pipeline = HybridPipeline(
+pipeline = Alloy(
     qdrant_client=client,
     collection_name="documents",
-    hybrid_pipeline_config=pipeline_config,
+    alloy_config=pipeline_config,
 )
 
 # 5. Index documents
@@ -127,39 +127,49 @@ Alloy is model-agnostic and works with any model supported by fastembed:
 
 ### YAML Configuration
 
-You can also load pipelines directly from YAML files for cleaner code:
+For production deployments, define your pipeline in YAML:
 
 ```yaml
-# config.yaml
-dense_embedding:
-  package: "fastembed"
+# config.yml
+text_embedding:
   model_name: "BAAI/bge-small-en-v1.5"
-  params:
+  vector_params:
     size: 384
     distance: "Cosine"
 
 sparse_embedding:
-  package: "fastembed"
   model_name: "Qdrant/bm25"
+  vector_params:
+    modifier: "IDF"
 
-late_interaction_embedding:
-  package: "fastembed"
+late_interaction_text_embedding:
   model_name: "answerdotai/answerai-colbert-small-v1"
-  params:
-    size: 96
+  vector_params:
+    size: 128
     distance: "Cosine"
 
-multi_tenant: true
+# Optional multi-tenant settings
 partition_config:
-  field: "tenant_id"
-  type: "keyword"
+  field_name: "tenant_id"
+  index_params:
+    type: "keyword"
+    minWordLength: 1
+    maxWordLength: 100
+
+multi_tenant: true
+replication_factor: 2
+shard_number: 3
 ```
 
-```python
-from qdrant_alloy import create_hybrid_pipeline_from_yaml
+Then load it in Python:
 
-config = create_hybrid_pipeline_from_yaml("config.yaml")
-pipeline = HybridPipeline(client, "my_collection", config)
+```python
+from qdrant_client import QdrantClient
+from qdrant_alloy import create_alloy_from_yaml
+
+client = QdrantClient("localhost")
+config = create_alloy_from_yaml("config.yaml")
+pipeline = Alloy(client, "my_collection", config)
 ```
 
 ## Development

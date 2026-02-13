@@ -22,10 +22,10 @@ from qdrant_client.models import (
     MatchValue,
 )
 
-from .hybrid_pipeline_config import HybridPipelineConfig, SentenceTransformerEmbedding
+from .alloy_config import AlloyConfig, SentenceTransformerEmbedding
 
 
-class HybridPipeline:
+class Alloy:
     """
     Pipeline for hybrid search using multiple embedding types.
 
@@ -56,22 +56,22 @@ class HybridPipeline:
         self,
         qdrant_client: QdrantClient,
         collection_name: str,
-        hybrid_pipeline_config: HybridPipelineConfig,
+        alloy_config: AlloyConfig,
     ):
         """
-        Initialize a new HybridPipeline instance.
+        Initialize a new Alloy instance.
 
         Args:
             qdrant_client: Client for interacting with the Qdrant vector database
             collection_name: Name of the Qdrant collection to create
-            hybrid_pipeline_config: Configuration for the hybrid pipeline
+            alloy_config: Configuration for the hybrid pipeline
 
         Raises:
             ValueError: If the collection already exists
         """
         self.collection_name = collection_name
         self.qdrant_client = qdrant_client
-        self.config = hybrid_pipeline_config
+        self.config = alloy_config
         self.vectors_config_dict = self.config.get_vectors_config_dict()
         self.sparse_vectors_config_dict = self.config.get_sparse_vectors_config_dict()
         self.multi_tenant = self.config.multi_tenant

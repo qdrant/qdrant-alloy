@@ -16,16 +16,16 @@ from qdrant_client.models import (
     MultiVectorComparator,
 )
 
-from hybrid_search import (
-    HybridPipelineConfig,
-    HybridPipeline,
+from alloy import (
+    AlloyConfig,
+    Alloy,
     SentenceTransformerEmbedding,
-    create_hybrid_pipeline_from_yaml,
+    create_alloy_from_yaml,
 )
 
 
-class TestHybridPipelineIntegration:
-    """Integration tests for the HybridPipeline class in a multi-node environment."""
+class TestAlloyIntegration:
+    """Integration tests for the Alloy class in a multi-node environment."""
 
     @pytest.fixture
     def client(self):
@@ -51,17 +51,17 @@ class TestHybridPipelineIntegration:
             print(f"Cleanup error: {e}")
 
     @pytest.fixture
-    def hybrid_pipeline_config(self):
+    def alloy_config(self):
         """
-        Create and return a HybridPipelineConfig for testing.
+        Create and return a AlloyConfig for testing.
 
         Configures all three embedding types (dense, sparse, and late interaction)
         using small models suitable for testing. Sets up multi-tenant support
-        with tenant partitioning and configures replication and sharding for a
+        and configures the collection for efficient search in a distributed
         two-node cluster setup.
 
         Returns:
-            HybridPipelineConfig: Fully configured pipeline config for testing
+            AlloyConfig: Fully configured pipeline config for testing
         """
         sentence_transformer_model = SentenceTransformerEmbedding(
             "BAAI/bge-small-en-v1.5"
@@ -101,7 +101,7 @@ class TestHybridPipelineIntegration:
             on_disk=True,
         )
 
-        return HybridPipelineConfig(
+        return AlloyConfig(
             text_embedding_config=(sentence_transformer_model, dense_params),
             sparse_embedding_config=(sparse_model, sparse_params),
             late_interaction_text_embedding_config=(late_model, late_params),
@@ -111,28 +111,25 @@ class TestHybridPipelineIntegration:
             shard_number=3,
         )
 
-    def test_replication_works_with_two_nodes(self, client, hybrid_pipeline_config):
+    def test_pipeline_initialization(self, client, alloy_config):
         """
-        Verify replication and multi-tenant functionality in a two-node cluster.
+        Test that the pipeline can be initialized and creates a collection with the correct configuration.
 
-        This test:
-        1. Creates a collection with replication across two nodes
-        2. Verifies the collection configuration has correct replication factors and sharding
-        3. Tests multi-tenant functionality by:
-           - Inserting documents for different tenants
-           - Searching with tenant-specific filters
-           - Verifying search results are correctly filtered by tenant
+        This test verifies that:
+        1. The pipeline can be initialized with a valid configuration
+        2. The collection is created with the correct parameters
+        3. The collection exists in Qdrant after initialization
 
         Args:
-            client: Qdrant client fixture
-            hybrid_pipeline_config: Configured pipeline config fixture
+            client: A fixture providing a QdrantClient connected to the test cluster.
+            alloy_config: A fixture providing a fully configured pipeline config.
         """
         collection_name = f"test_collection_{uuid.uuid4().hex[:8]}"
 
-        pipeline = HybridPipeline(
+        pipeline = Alloy(
             qdrant_client=client,
             collection_name=collection_name,
-            hybrid_pipeline_config=hybrid_pipeline_config,
+            alloy_config=alloy_config,
         )
 
         collection_info = client.get_collection(collection_name=collection_name)
@@ -171,27 +168,27 @@ class TestHybridPipelineIntegration:
             "Results should be filtered to tenant B"
         )
 
-    def test_pipeline_creation_from_yaml(self, client):
+    def test_yaml_config_loading(self, client):
         """
-        Verify that the pipeline can be correctly initialized from a YAML file.
+        Test that the pipeline can be initialized from a YAML configuration file.
 
         This test:
         1. Loads a configuration from a YAML file in the root directory.
-        2. Initializes the HybridPipeline with the file path.
+        2. Initializes the Alloy with the file path.
         3. Verifies that the created collection in Qdrant has the parameters
            specified in the YAML file.
 
         Args:
-            client: Qdrant client fixture
+            client: A fixture providing a QdrantClient connected to the test cluster.
         """
-        collection_name = f"test_yaml_collection_{uuid.uuid4().hex[:8]}"
+        collection_name = f"test_collection_{uuid.uuid4().hex[:8]}"
 
         yaml_config_path = "config_examples/base_config.yml"
 
-        _ = HybridPipeline(
+        _ = Alloy(
             qdrant_client=client,
             collection_name=collection_name,
-            hybrid_pipeline_config=create_hybrid_pipeline_from_yaml(yaml_config_path),
+            alloy_config=create_alloy_from_yaml(yaml_config_path),
         )
 
         collection_info = client.get_collection(collection_name=collection_name)

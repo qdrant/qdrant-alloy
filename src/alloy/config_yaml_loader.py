@@ -18,7 +18,7 @@ from qdrant_client.models import (
     KeywordIndexParams,
 )
 
-from .hybrid_pipeline_config import HybridPipelineConfig, SentenceTransformerEmbedding
+from .alloy_config import AlloyConfig, SentenceTransformerEmbedding
 
 
 class DenseEmbeddingConfig(BaseModel):
@@ -91,7 +91,7 @@ def _build_vector_params(params_dict: Dict[str, Any]) -> VectorParams:
     return VectorParams(**params_dict)
 
 
-def create_hybrid_pipeline_from_yaml(path: Union[str, Path]) -> YAMLConfig:
+def create_alloy_from_yaml(path: Union[str, Path]) -> YAMLConfig:
     """Create a hybrid pipeline from a YAML configuration file."""
     config = YAMLConfig.from_yaml(path)
 
@@ -132,4 +132,4 @@ def create_hybrid_pipeline_from_yaml(path: Union[str, Path]) -> YAMLConfig:
     if config.shard_number is not None:
         pipeline_args["shard_number"] = config.shard_number
 
-    return HybridPipelineConfig(**pipeline_args)
+    return AlloyConfig(**pipeline_args)

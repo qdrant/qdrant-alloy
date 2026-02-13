@@ -1,7 +1,7 @@
 """
-Unit tests for the HybridPipelineConfig class.
+Unit tests for the AlloyConfig class.
 
-This module contains comprehensive tests for the HybridPipelineConfig class,
+This module contains comprehensive tests for the AlloyConfig class,
 ensuring that all configuration validation and utility methods work as expected.
 """
 
@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 from qdrant_client.conversions import common_types as types
 from qdrant_client.models import KeywordIndexParams
 
-from hybrid_search.hybrid_pipeline_config import HybridPipelineConfig
+from alloy.alloy_config import AlloyConfig
 
 
 @pytest.fixture
@@ -98,12 +98,12 @@ def valid_config(
     sparse_vector_params,
 ):
     """
-    Create a valid HybridPipelineConfig for testing.
+    Create a valid AlloyConfig for testing.
 
     Returns:
-        HybridPipelineConfig: A valid configuration without multi-tenancy.
+        AlloyConfig: A valid configuration without multi-tenancy.
     """
-    return HybridPipelineConfig(
+    return AlloyConfig(
         text_embedding_config=(mock_text_embedding, vector_params),
         sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
         late_interaction_text_embedding_config=(
@@ -126,12 +126,12 @@ def valid_multi_tenant_config(
     keyword_index_params,
 ):
     """
-    Create a valid multi-tenant HybridPipelineConfig for testing.
+    Create a valid multi-tenant AlloyConfig for testing.
 
     Returns:
-        HybridPipelineConfig: A valid configuration with multi-tenancy enabled.
+        AlloyConfig: A valid configuration with multi-tenancy enabled.
     """
-    return HybridPipelineConfig(
+    return AlloyConfig(
         text_embedding_config=(mock_text_embedding, vector_params),
         sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
         late_interaction_text_embedding_config=(
@@ -145,12 +145,12 @@ def valid_multi_tenant_config(
     )
 
 
-class TestHybridPipelineConfig:
+class TestAlloyConfig:
     """
-    Test suite for the HybridPipelineConfig class.
+    Test suite for the AlloyConfig class.
 
     This class contains tests for configuration validation and utility methods
-    of the HybridPipelineConfig class.
+    of the AlloyConfig class.
     """
 
     def test_valid_config(self, valid_config):
@@ -158,7 +158,7 @@ class TestHybridPipelineConfig:
         Test that a valid configuration is accepted.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         assert valid_config is not None
         assert valid_config.multi_tenant is False
@@ -171,7 +171,7 @@ class TestHybridPipelineConfig:
         Test that a valid multi-tenant configuration is accepted.
 
         Args:
-            valid_multi_tenant_config: A fixture providing a valid multi-tenant HybridPipelineConfig.
+            valid_multi_tenant_config: A fixture providing a valid multi-tenant AlloyConfig.
         """
         assert valid_multi_tenant_config is not None
         assert valid_multi_tenant_config.multi_tenant is True
@@ -200,7 +200,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="partition_config must be provided if multi_tenant is True",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -236,7 +236,7 @@ class TestHybridPipelineConfig:
         with pytest.raises(
             ValueError, match="partition_config must be None if multi_tenant is False"
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -270,7 +270,7 @@ class TestHybridPipelineConfig:
         with pytest.raises(
             ValueError, match="replication_factor must be an integer greater than 0"
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -303,7 +303,7 @@ class TestHybridPipelineConfig:
         with pytest.raises(
             ValueError, match="shard_number must be an integer greater than 0"
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -320,7 +320,7 @@ class TestHybridPipelineConfig:
         Test that list_embedding_configs returns the correct configurations.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         configs = valid_config.list_embedding_configs()
         assert len(configs) == 3
@@ -333,7 +333,7 @@ class TestHybridPipelineConfig:
         Test that list_embedding_model_names returns the correct model names.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         model_names = valid_config.list_embedding_model_names()
         assert len(model_names) == 3
@@ -344,7 +344,7 @@ class TestHybridPipelineConfig:
         Test that list_embedding_models returns the correct models.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         models = valid_config.list_embedding_models()
         assert len(models) == 3
@@ -357,7 +357,7 @@ class TestHybridPipelineConfig:
         Test that get_vectors_config_dict returns the correct vector configurations.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         vector_configs = valid_config.get_vectors_config_dict()
         assert len(vector_configs) == 2
@@ -370,7 +370,7 @@ class TestHybridPipelineConfig:
         Test that get_sparse_vectors_config_dict returns the correct sparse vector configurations.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig.
+            valid_config: A fixture providing a valid AlloyConfig.
         """
         sparse_vector_configs = valid_config.get_sparse_vectors_config_dict()
         assert len(sparse_vector_configs) == 1
@@ -383,7 +383,7 @@ class TestHybridPipelineConfig:
         Test that get_partition_config returns the correct partition configuration.
 
         Args:
-            valid_multi_tenant_config: A fixture providing a valid multi-tenant HybridPipelineConfig.
+            valid_multi_tenant_config: A fixture providing a valid multi-tenant AlloyConfig.
         """
         partition_field, partition_params = (
             valid_multi_tenant_config.get_partition_config()
@@ -396,7 +396,7 @@ class TestHybridPipelineConfig:
         Test that get_partition_config raises an error when partition_config is None.
 
         Args:
-            valid_config: A fixture providing a valid HybridPipelineConfig without partition_config.
+            valid_config: A fixture providing a valid AlloyConfig without partition_config.
         """
         with pytest.raises(
             ValueError, match="partition_config must be specified during instantiation"
@@ -430,7 +430,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="Embedding model in text_embedding_config must be an instance of TextEmbedding",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_invalid, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -469,7 +469,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="Embedding model in sparse_embedding_config must be an instance of SparseEmbedding",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_invalid, sparse_vector_params),
                 late_interaction_text_embedding_config=(
@@ -508,7 +508,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="Embedding model in late_interaction_text_embedding_config must be an instance of LateInteractionTextEmbedding",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(mock_invalid, vector_params),
@@ -541,7 +541,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="Embedding model in late_interaction_text_embedding_config must have a 'model_name' attribute",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(mock_invalid, vector_params),
@@ -574,7 +574,7 @@ class TestHybridPipelineConfig:
             ValueError,
             match="Embedding model in late_interaction_text_embedding_config must have an 'embed' method",
         ):
-            HybridPipelineConfig(
+            AlloyConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(mock_invalid, vector_params),

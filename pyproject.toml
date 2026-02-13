@@ -52,9 +52,9 @@ dev = [
 test = ["qdrant-alloy[dev]"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hybrid_search/"]
+packages = ["src/alloy/"]
 
 [tool.hatch.build]
 include = [
-  "src/hybrid_search/**/*.py",
+  "src/alloy/**/*.py",
 ]

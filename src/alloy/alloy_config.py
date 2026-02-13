@@ -49,7 +49,7 @@ BaseVectorParams = TypeVar(
 """Type variable for the different types of vector parameters supported."""
 
 
-class HybridPipelineConfig(BaseModel):
+class AlloyConfig(BaseModel):
     """
     Configuration for a hybrid search pipeline combining multiple embedding types.
 
