@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 
 from qdrant_client.conversions import common_types as types
 from qdrant_client.models import KeywordIndexParams
-from pydantic import ValidationError
 
 from hybrid_search.hybrid_pipeline_config import HybridPipelineConfig
 
@@ -92,11 +91,11 @@ def keyword_index_params():
 
 @pytest.fixture
 def valid_config(
-    mock_text_embedding, 
-    mock_sparse_embedding, 
+    mock_text_embedding,
+    mock_sparse_embedding,
     mock_late_interaction_embedding,
     vector_params,
-    sparse_vector_params
+    sparse_vector_params,
 ):
     """
     Create a valid HybridPipelineConfig for testing.
@@ -108,8 +107,8 @@ def valid_config(
         text_embedding_config=(mock_text_embedding, vector_params),
         sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
         late_interaction_text_embedding_config=(
-            mock_late_interaction_embedding, 
-            vector_params
+            mock_late_interaction_embedding,
+            vector_params,
         ),
         multi_tenant=False,
         replication_factor=2,
@@ -119,12 +118,12 @@ def valid_config(
 
 @pytest.fixture
 def valid_multi_tenant_config(
-    mock_text_embedding, 
-    mock_sparse_embedding, 
+    mock_text_embedding,
+    mock_sparse_embedding,
     mock_late_interaction_embedding,
     vector_params,
     sparse_vector_params,
-    keyword_index_params
+    keyword_index_params,
 ):
     """
     Create a valid multi-tenant HybridPipelineConfig for testing.
@@ -136,8 +135,8 @@ def valid_multi_tenant_config(
         text_embedding_config=(mock_text_embedding, vector_params),
         sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
         late_interaction_text_embedding_config=(
-            mock_late_interaction_embedding, 
-            vector_params
+            mock_late_interaction_embedding,
+            vector_params,
         ),
         partition_config=("tenant_id", keyword_index_params),
         multi_tenant=True,
@@ -149,7 +148,7 @@ def valid_multi_tenant_config(
 class TestHybridPipelineConfig:
     """
     Test suite for the HybridPipelineConfig class.
-    
+
     This class contains tests for configuration validation and utility methods
     of the HybridPipelineConfig class.
     """
@@ -157,7 +156,7 @@ class TestHybridPipelineConfig:
     def test_valid_config(self, valid_config):
         """
         Test that a valid configuration is accepted.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -170,7 +169,7 @@ class TestHybridPipelineConfig:
     def test_valid_multi_tenant_config(self, valid_multi_tenant_config):
         """
         Test that a valid multi-tenant configuration is accepted.
-        
+
         Args:
             valid_multi_tenant_config: A fixture providing a valid multi-tenant HybridPipelineConfig.
         """
@@ -181,15 +180,15 @@ class TestHybridPipelineConfig:
 
     def test_missing_partition_config_with_multi_tenant(
         self,
-        mock_text_embedding, 
-        mock_sparse_embedding, 
+        mock_text_embedding,
+        mock_sparse_embedding,
         mock_late_interaction_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when multi_tenant is True but partition_config is None.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -197,13 +196,16 @@ class TestHybridPipelineConfig:
             vector_params: A fixture providing VectorParams.
             sparse_vector_params: A fixture providing SparseVectorParams.
         """
-        with pytest.raises(ValueError, match="partition_config must be provided if multi_tenant is True"):
+        with pytest.raises(
+            ValueError,
+            match="partition_config must be provided if multi_tenant is True",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 multi_tenant=True,
                 partition_config=None,
@@ -213,16 +215,16 @@ class TestHybridPipelineConfig:
 
     def test_partition_config_without_multi_tenant(
         self,
-        mock_text_embedding, 
-        mock_sparse_embedding, 
+        mock_text_embedding,
+        mock_sparse_embedding,
         mock_late_interaction_embedding,
         vector_params,
         sparse_vector_params,
-        keyword_index_params
+        keyword_index_params,
     ):
         """
         Test that a ValidationError is raised when multi_tenant is False but partition_config is provided.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -231,13 +233,15 @@ class TestHybridPipelineConfig:
             sparse_vector_params: A fixture providing SparseVectorParams.
             keyword_index_params: A fixture providing KeywordIndexParams.
         """
-        with pytest.raises(ValueError, match="partition_config must be None if multi_tenant is False"):
+        with pytest.raises(
+            ValueError, match="partition_config must be None if multi_tenant is False"
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 partition_config=("tenant_id", keyword_index_params),
                 multi_tenant=False,
@@ -247,15 +251,15 @@ class TestHybridPipelineConfig:
 
     def test_invalid_replication_factor(
         self,
-        mock_text_embedding, 
-        mock_sparse_embedding, 
+        mock_text_embedding,
+        mock_sparse_embedding,
         mock_late_interaction_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when replication_factor is invalid.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -263,13 +267,15 @@ class TestHybridPipelineConfig:
             vector_params: A fixture providing VectorParams.
             sparse_vector_params: A fixture providing SparseVectorParams.
         """
-        with pytest.raises(ValueError, match="replication_factor must be an integer greater than 0"):
+        with pytest.raises(
+            ValueError, match="replication_factor must be an integer greater than 0"
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 multi_tenant=False,
                 replication_factor=0,
@@ -278,15 +284,15 @@ class TestHybridPipelineConfig:
 
     def test_invalid_shard_number(
         self,
-        mock_text_embedding, 
-        mock_sparse_embedding, 
+        mock_text_embedding,
+        mock_sparse_embedding,
         mock_late_interaction_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when shard_number is invalid.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -294,13 +300,15 @@ class TestHybridPipelineConfig:
             vector_params: A fixture providing VectorParams.
             sparse_vector_params: A fixture providing SparseVectorParams.
         """
-        with pytest.raises(ValueError, match="shard_number must be an integer greater than 0"):
+        with pytest.raises(
+            ValueError, match="shard_number must be an integer greater than 0"
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 multi_tenant=False,
                 replication_factor=2,
@@ -310,7 +318,7 @@ class TestHybridPipelineConfig:
     def test_list_embedding_configs(self, valid_config):
         """
         Test that list_embedding_configs returns the correct configurations.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -323,7 +331,7 @@ class TestHybridPipelineConfig:
     def test_list_embedding_model_names(self, valid_config):
         """
         Test that list_embedding_model_names returns the correct model names.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -334,7 +342,7 @@ class TestHybridPipelineConfig:
     def test_list_embedding_models(self, valid_config):
         """
         Test that list_embedding_models returns the correct models.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -347,7 +355,7 @@ class TestHybridPipelineConfig:
     def test_get_vectors_config_dict(self, valid_config):
         """
         Test that get_vectors_config_dict returns the correct vector configurations.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -360,7 +368,7 @@ class TestHybridPipelineConfig:
     def test_get_sparse_vectors_config_dict(self, valid_config):
         """
         Test that get_sparse_vectors_config_dict returns the correct sparse vector configurations.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig.
         """
@@ -373,36 +381,40 @@ class TestHybridPipelineConfig:
     def test_get_partition_config(self, valid_multi_tenant_config):
         """
         Test that get_partition_config returns the correct partition configuration.
-        
+
         Args:
             valid_multi_tenant_config: A fixture providing a valid multi-tenant HybridPipelineConfig.
         """
-        partition_field, partition_params = valid_multi_tenant_config.get_partition_config()
+        partition_field, partition_params = (
+            valid_multi_tenant_config.get_partition_config()
+        )
         assert partition_field == "tenant_id"
         assert isinstance(partition_params, KeywordIndexParams)
 
     def test_get_partition_config_error(self, valid_config):
         """
         Test that get_partition_config raises an error when partition_config is None.
-        
+
         Args:
             valid_config: A fixture providing a valid HybridPipelineConfig without partition_config.
         """
-        with pytest.raises(ValueError, match="partition_config must be specified during instantiation"):
+        with pytest.raises(
+            ValueError, match="partition_config must be specified during instantiation"
+        ):
             valid_config.get_partition_config()
 
     @patch("hybrid_search.hybrid_pipeline_config.TextEmbedding")
     def test_invalid_text_embedding_type(
         self,
         _,
-        mock_sparse_embedding, 
+        mock_sparse_embedding,
         mock_late_interaction_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when text_embedding_config has an invalid type.
-        
+
         Args:
             _: A patch for TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -414,13 +426,16 @@ class TestHybridPipelineConfig:
         mock_invalid.model_name = "invalid_model"
         mock_invalid.embed.return_value = [[0.1, 0.2, 0.3]]
 
-        with pytest.raises(ValueError, match="Embedding model in text_embedding_config must be an instance of TextEmbedding"):
+        with pytest.raises(
+            ValueError,
+            match="Embedding model in text_embedding_config must be an instance of TextEmbedding",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_invalid, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 multi_tenant=False,
                 replication_factor=2,
@@ -434,11 +449,11 @@ class TestHybridPipelineConfig:
         mock_text_embedding,
         mock_late_interaction_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when sparse_embedding_config has an invalid type.
-        
+
         Args:
             _: A patch for SparseEmbedding.
             mock_text_embedding: A fixture providing a mock TextEmbedding.
@@ -450,13 +465,16 @@ class TestHybridPipelineConfig:
         mock_invalid.model_name = "invalid_model"
         mock_invalid.embed.return_value = [[0.1, 0.2, 0.3]]
 
-        with pytest.raises(ValueError, match="Embedding model in sparse_embedding_config must be an instance of SparseEmbedding"):
+        with pytest.raises(
+            ValueError,
+            match="Embedding model in sparse_embedding_config must be an instance of SparseEmbedding",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_invalid, sparse_vector_params),
                 late_interaction_text_embedding_config=(
-                    mock_late_interaction_embedding, 
-                    vector_params
+                    mock_late_interaction_embedding,
+                    vector_params,
                 ),
                 multi_tenant=False,
                 replication_factor=2,
@@ -470,11 +488,11 @@ class TestHybridPipelineConfig:
         mock_text_embedding,
         mock_sparse_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when late_interaction_text_embedding_config has an invalid type.
-        
+
         Args:
             _: A patch for LateInteractionTextEmbedding.
             mock_text_embedding: A fixture providing a mock TextEmbedding.
@@ -486,7 +504,10 @@ class TestHybridPipelineConfig:
         mock_invalid.model_name = "invalid_model"
         mock_invalid.embed.return_value = [[0.1, 0.2, 0.3]]
 
-        with pytest.raises(ValueError, match="Embedding model in late_interaction_text_embedding_config must be an instance of LateInteractionTextEmbedding"):
+        with pytest.raises(
+            ValueError,
+            match="Embedding model in late_interaction_text_embedding_config must be an instance of LateInteractionTextEmbedding",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
@@ -501,11 +522,11 @@ class TestHybridPipelineConfig:
         mock_text_embedding,
         mock_sparse_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when an embedding model is missing the model_name attribute.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -516,7 +537,10 @@ class TestHybridPipelineConfig:
         # No model_name attribute
         mock_invalid.embed.return_value = [[0.1, 0.2, 0.3]]
 
-        with pytest.raises(ValueError, match="Embedding model in late_interaction_text_embedding_config must have a 'model_name' attribute"):
+        with pytest.raises(
+            ValueError,
+            match="Embedding model in late_interaction_text_embedding_config must have a 'model_name' attribute",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
@@ -531,11 +555,11 @@ class TestHybridPipelineConfig:
         mock_text_embedding,
         mock_sparse_embedding,
         vector_params,
-        sparse_vector_params
+        sparse_vector_params,
     ):
         """
         Test that a ValidationError is raised when an embedding model is missing the embed method.
-        
+
         Args:
             mock_text_embedding: A fixture providing a mock TextEmbedding.
             mock_sparse_embedding: A fixture providing a mock SparseEmbedding.
@@ -546,7 +570,10 @@ class TestHybridPipelineConfig:
         mock_invalid.model_name = "invalid_model"
         # No embed method
 
-        with pytest.raises(ValueError, match="Embedding model in late_interaction_text_embedding_config must have an 'embed' method"):
+        with pytest.raises(
+            ValueError,
+            match="Embedding model in late_interaction_text_embedding_config must have an 'embed' method",
+        ):
             HybridPipelineConfig(
                 text_embedding_config=(mock_text_embedding, vector_params),
                 sparse_embedding_config=(mock_sparse_embedding, sparse_vector_params),
