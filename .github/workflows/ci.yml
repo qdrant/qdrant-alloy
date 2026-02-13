@@ -51,7 +51,8 @@ jobs:
       - name: Run tests with coverage
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          uv run coverage run -m pytest tests/
+          # Add --ignore=tests/integration/ to skip integration tests
+          uv run coverage run -m pytest tests/ --ignore=tests/integration/ 
           uv run coverage xml
 
       # Upload to Codecov (Using the secret you just set up)

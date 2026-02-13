@@ -8,8 +8,12 @@ ensuring that all configuration validation and utility methods work as expected.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from qdrant_client.conversions import common_types as types
-from qdrant_client.models import KeywordIndexParams
+from qdrant_client.models import (
+    KeywordIndexParams,
+    SparseVectorParams,
+    SparseIndexParams,
+    VectorParams,
+)
 
 from alloy.alloy_config import AlloyConfig
 
@@ -62,9 +66,9 @@ def vector_params():
     Create a mock VectorParams object for testing.
 
     Returns:
-        types.VectorParams: A VectorParams object for dense embeddings.
+        VectorParams: A VectorParams object for dense embeddings.
     """
-    return types.VectorParams(size=3, distance="Cosine")
+    return VectorParams(size=3, distance="Cosine")
 
 
 @pytest.fixture
@@ -73,9 +77,9 @@ def sparse_vector_params():
     Create a mock SparseVectorParams object for testing.
 
     Returns:
-        types.SparseVectorParams: A SparseVectorParams object for sparse embeddings.
+        SparseVectorParams: A SparseVectorParams object for sparse embeddings.
     """
-    return types.SparseVectorParams(index=types.SparseIndexParams())
+    return SparseVectorParams(index=SparseIndexParams())
 
 
 @pytest.fixture

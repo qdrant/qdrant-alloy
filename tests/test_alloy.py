@@ -10,9 +10,11 @@ import uuid
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-from qdrant_client.conversions import common_types as types
 from qdrant_client.models import (
     KeywordIndexParams,
+    SparseVectorParams,
+    SparseIndexParams,
+    VectorParams,
 )
 
 from alloy.alloy import Alloy
@@ -66,9 +68,9 @@ def vector_params():
     Create a VectorParams object for testing.
 
     Returns:
-        types.VectorParams: A VectorParams object for dense embeddings.
+        VectorParams: A VectorParams object for dense embeddings.
     """
-    return types.VectorParams(size=3, distance="Cosine")
+    return VectorParams(size=3, distance="Cosine")
 
 
 @pytest.fixture
@@ -77,9 +79,9 @@ def sparse_vector_params():
     Create a SparseVectorParams object for testing.
 
     Returns:
-        types.SparseVectorParams: A SparseVectorParams object for sparse embeddings.
+        SparseVectorParams: A SparseVectorParams object for sparse embeddings.
     """
-    return types.SparseVectorParams(index=types.SparseIndexParams())
+    return SparseVectorParams(index=SparseIndexParams())
 
 
 @pytest.fixture
@@ -94,7 +96,7 @@ def keyword_index_params():
 
 
 @pytest.fixture
-def mock_config(
+def mock_alloy_config(
     mock_text_embedding,
     mock_sparse_embedding,
     mock_late_interaction_embedding,
