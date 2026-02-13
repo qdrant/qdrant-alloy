@@ -317,6 +317,11 @@ class HybridPipeline:
         """
         if overquery_factor < 1.0:
             raise ValueError("overquery_factor must be greater than or equal to 1.0")
+
+        if self.multi_tenant and self.config.enforce_tenant_filter and partition_filter is None:
+            raise ValueError(
+                "partition_filter is required because enforce_tenant_filter is set to True."
+            )
         
         filter_condition = None
         if partition_filter:

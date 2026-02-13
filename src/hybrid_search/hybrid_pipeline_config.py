@@ -76,17 +76,28 @@ class HybridPipelineConfig(BaseModel):
         shard_number: The number of shards for the Qdrant collection.
             Affects write performance and horizontal scalability. Default is 3.
     """
+    
     DENSE_VECTOR_NAME: ClassVar[str] = "dense"
+    
     SPARSE_VECTOR_NAME: ClassVar[str] = "sparse"
+    
     LATE_INTERACTION_VECTOR_NAME: ClassVar[str] = "multivector"
 
     text_embedding_config: Tuple[Union[TextEmbedding, SentenceTransformerEmbedding], types.VectorParams]
+    
     sparse_embedding_config: Tuple[SparseTextEmbedding, types.SparseVectorParams]
+    
     late_interaction_text_embedding_config: Optional[Tuple[LateInteractionTextEmbedding, types.VectorParams]] = None
+    
     # TODO: Replace PartitionConfig with MultiTenantConfig -> allow user to specify global index or not during collection creation
     partition_config: Optional[Tuple[str, KeywordIndexParams]] = None
+    
     multi_tenant: Optional[bool] = False
+    
+    enforce_tenant_filter: Optional[bool] = False
+    
     replication_factor: Optional[int] = 2
+    
     shard_number: Optional[int] = 3
 
     model_config = {
