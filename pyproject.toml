@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 authors = [
-    { name = "Brian O'Grady", email = "genesysdatallc@gmail.com" }
+    { name = "Brian O'Grady", email = "brian.ogrady@qdrant.com" }
 ]
 maintainers = [
-    { name = "Brian O'Grady", email = "genesysdatallc@gmail.com" }
+    { name = "Brian O'Grady", email = "brian.ogrady@qdrant.com" }
 ]
 keywords = ["qdrant", "vector", "database", "embeddings", "similarity-search", "colbert", "late-interaction"]
 classifiers = [
@@ -49,7 +49,7 @@ dev = [
     "twine>=4.0.2",
 ]
 
-test = ["fastembed-hybrid-pipeline[dev]"]
+test = ["qdrant-alloy[dev]"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hybrid_search/"]
