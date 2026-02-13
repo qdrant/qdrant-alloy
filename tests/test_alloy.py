@@ -421,7 +421,9 @@ class TestAlloy:
             else:
                 assert point.payload["key2"] == "value2"
 
-    def test_prepare_documents_length_mismatch(self, mock_qdrant_client, mock_alloy_config):
+    def test_prepare_documents_length_mismatch(
+        self, mock_qdrant_client, mock_alloy_config
+    ):
         """
         Test that an error is raised when the lengths of documents, payloads, and document_ids don't match.
 
@@ -648,7 +650,9 @@ class TestAlloy:
                 call_args["prefetch"][1].filter.must[0].match.value == partition_filter
             )
 
-    def test_search_invalid_overquery_factor(self, mock_qdrant_client, mock_alloy_config):
+    def test_search_invalid_overquery_factor(
+        self, mock_qdrant_client, mock_alloy_config
+    ):
         """
         Test that an error is raised when overquery_factor is invalid.
 

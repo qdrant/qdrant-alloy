@@ -310,35 +310,6 @@ wheels = [
 ]
 
 [[package]]
-name = "fastembed-hybrid-pipeline"
-version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fastembed" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "qdrant-client" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/fe/f64eae3ad1524053881779c56739fe4e88317d8dfabbdc66fb4b8de6fd89/fastembed_hybrid_pipeline-0.1.0.tar.gz", hash = "sha256:9a657000e30e36b68f9ba9638d6f29655a6b4d47b68b905e48939d2f7eb62b0c", size = 10212, upload-time = "2025-04-20T18:34:03.561Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/f4/ccbc3ab8ce0e772ce42e94cc5e2cabbf449ab1866eaeddf871b52b3eda4f/fastembed_hybrid_pipeline-0.1.0-py3-none-any.whl", hash = "sha256:4479818a17fc1b2cb15b21a7153377feb6b040ac24c09947b6d30b3c5d030962", size = 11026, upload-time = "2025-04-20T18:34:01.939Z" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "build" },
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-    { name = "twine" },
-]
-
-[[package]]
 name = "filelock"
 version = "3.18.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1524,14 +1495,22 @@ dev = [
     { name = "twine" },
 ]
 test = [
-    { name = "fastembed-hybrid-pipeline", extra = ["dev"] },
+    { name = "build" },
+    { name = "mypy" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+    { name = "twine" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "build", marker = "extra == 'dev'", specifier = ">=1.0.3" },
     { name = "fastembed", specifier = ">=0.6.1" },
-    { name = "fastembed-hybrid-pipeline", extras = ["dev"], marker = "extra == 'test'" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.7.0" },
     { name = "pydantic", specifier = ">=2.11.3" },
@@ -1542,6 +1521,7 @@ requires-dist = [
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "qdrant-alloy", extras = ["dev"], marker = "extra == 'test'" },
     { name = "qdrant-client", specifier = ">=1.14.2" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.7,<0.10" },
     { name = "sentence-transformers", specifier = "==5.0.0" },
